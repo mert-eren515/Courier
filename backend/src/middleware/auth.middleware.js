@@ -27,6 +27,12 @@ export const protectRoute = async (req, res, next) => {
 
     next();
   } catch (error) {
+    // A malformed or expired cookie is the caller's problem, not a server fault.
+    if (error instanceof jwt.JsonWebTokenError) {
+      console.log("Rejected token in protectRoute:", error.message);
+      return res.status(401).json({ message: "Unauthorized - Invalid Token" });
+    }
+
     console.log("Error in protectRoute middleware: ", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
