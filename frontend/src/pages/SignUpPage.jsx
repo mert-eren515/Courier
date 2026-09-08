@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import {
+  AtSign,
   Eye,
   EyeOff,
   Loader2,
@@ -18,6 +19,7 @@ const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
+    username: "",
     email: "",
     password: "",
   });
@@ -26,6 +28,15 @@ const SignUpPage = () => {
 
   const validateForm = () => {
     if (!formData.fullName.trim()) return toast.error("Full name is required");
+    if (!formData.username.trim()) return toast.error("Username is required");
+    if (formData.username.length < 3 || formData.username.length > 20)
+      return toast.error("Username must be between 3 and 20 characters");
+    // Mirrors USERNAME_PATTERN on the server: ASCII only, no separator at the
+    // edges and no two in a row.
+    if (!/^[a-zA-Z0-9]([a-zA-Z0-9]|[._](?![._]))*[a-zA-Z0-9]$/.test(formData.username))
+      return toast.error(
+        "Username can only contain letters, numbers, dots and underscores",
+      );
     if (!formData.email.trim()) return toast.error("Email is required");
     if (!/\S+@\S+\.\S+/.test(formData.email))
       return toast.error("Invalid email format");
@@ -81,6 +92,26 @@ const SignUpPage = () => {
                   value={formData.fullName}
                   onChange={(e) =>
                     setFormData({ ...formData, fullName: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Username</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <AtSign className="size-5 text-base-content/40" />
+                </div>
+                <input
+                  type="text"
+                  className={`input input-bordered w-full pl-10`}
+                  placeholder="johndoe"
+                  value={formData.username}
+                  onChange={(e) =>
+                    setFormData({ ...formData, username: e.target.value })
                   }
                 />
               </div>

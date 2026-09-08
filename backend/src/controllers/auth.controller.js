@@ -4,9 +4,9 @@ import bcrypt from "bcryptjs";
 import cloudinary from "../lib/cloudinary.js";
 
 export const signup = async (req, res) => {
-  const { fullName, email, password } = req.body;
+  const { fullName, username, email, password } = req.body;
   try {
-    if (!fullName || !email || !password) {
+    if (!fullName || !username || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -16,15 +16,29 @@ export const signup = async (req, res) => {
         .json({ message: "Password must be at least 6 characters" });
     }
 
+    if (username.length < 3 || username.length > 20) {
+      return res.status(400).json({
+        message: `Username must be between 3 and 20 characters`,
+      });
+    }
+
     const user = await User.findOne({ email });
 
     if (user) return res.status(400).json({ message: "Email already exists" });
+
+    // Usernames are case sensitive, so this only rejects an exact match.
+    const takenUsername = await User.findOne({ username });
+
+    if (takenUsername) {
+      return res.status(400).json({ message: "Username is already taken" });
+    }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({
       fullName,
+      username,
       email,
       password: hashedPassword,
     });
@@ -37,6 +51,7 @@ export const signup = async (req, res) => {
       res.status(201).json({
         _id: newUser._id,
         fullName: newUser.fullName,
+        username: newUser.username,
         email: newUser.email,
         profilePic: newUser.profilePic,
       });
@@ -72,6 +87,7 @@ export const login = async (req, res) => {
     res.status(200).json({
       _id: user._id,
       fullName: user.fullName,
+      username: user.username,
       email: user.email,
       profilePic: user.profilePic,
     });
@@ -109,7 +125,7 @@ export const updateProfile = async (req, res) => {
 
     res.status(200).json(updatedUser);
   } catch (error) {
-    console.log("error in update profile:", error);
+    console.log("Error in update profile:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

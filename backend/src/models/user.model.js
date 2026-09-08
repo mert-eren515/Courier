@@ -7,6 +7,13 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      minlength: 3,
+      maxlength: 20,
+    },
     fullName: {
       type: String,
       required: true,
@@ -20,6 +27,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    blocked: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true },
 );

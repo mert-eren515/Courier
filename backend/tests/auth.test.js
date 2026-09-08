@@ -24,6 +24,7 @@ useTestDatabase();
 
 const credentials = {
   fullName: "Test User",
+  username: "testuser",
   email: "test@example.com",
   password: "secret123",
 };
@@ -49,6 +50,7 @@ describe("POST /api/auth/signup", () => {
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({
       fullName: credentials.fullName,
+      username: credentials.username,
       email: credentials.email,
       profilePic: "",
     });
@@ -98,6 +100,37 @@ describe("POST /api/auth/signup", () => {
     await signup();
 
     expect(await User.countDocuments({ email: credentials.email })).toBe(1);
+  });
+
+  it("rejects a username that is already taken", async () => {
+    await signup();
+
+    const res = await signup({ email: "other@example.com" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("Username is already taken");
+  });
+
+  it("treats usernames as case sensitive", async () => {
+    await signup();
+
+    const res = await signup({ username: "TestUser", email: "other@example.com" });
+
+    expect(res.status).toBe(201);
+    expect(res.body.username).toBe("TestUser");
+  });
+
+  it("rejects a username shorter than three characters", async () => {
+    const res = await signup({ username: "ab" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toContain("between 3 and 20");
+  });
+
+  it("accepts dots and underscores between characters", async () => {
+    const res = await signup({ username: "mert.eren_05" });
+
+    expect(res.status).toBe(201);
   });
 });
 
